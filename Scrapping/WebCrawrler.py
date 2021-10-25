@@ -1,9 +1,6 @@
 import requests
 import datetime
-import numpy as np
 import pandas as pd
-from urllib.request import urlopen
-from urllib.request import urlretrieve
 from bs4 import BeautifulSoup
 
 headers = {'User-Agent':'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'}

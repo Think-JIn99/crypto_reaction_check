@@ -16,7 +16,7 @@ article_media = []
 article_date = []
 dt = datetime.datetime.now()
 
-for j in range(1, 2):  # 페이지
+for j in range(1, 3):  # 페이지
     # print("j = ", j)
 
     url = "https://www.investing.com/news/cryptocurrency-news/{}".format(j)

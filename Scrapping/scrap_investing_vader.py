@@ -1,6 +1,5 @@
 import requests
 import datetime
-import pandas as pd
 from bs4 import BeautifulSoup
 
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer

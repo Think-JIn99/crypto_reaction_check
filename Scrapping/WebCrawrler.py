@@ -28,7 +28,7 @@ for j in range(1, 20):#페이지
             article_link.append(url + articles[i].a['href'])  #링크
         article_media.append(articles[i].span.text.split(' - ')[0][3:]) #매체
 
-        if j<5:#날짜
+        if j<3:#날짜
             if articles_detail[i].text[3:].split(' ')[1][:6] == 'minute':
                 article_date.append((dt - datetime.timedelta(minutes=int(articles_detail[i].text[3:].split(' ')[0]))).strftime("%b %d, %Y"))
             elif articles_detail[i].text[3:].split(' ')[1][:4] == 'hour':

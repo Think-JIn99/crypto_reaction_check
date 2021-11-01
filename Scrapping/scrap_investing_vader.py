@@ -1,10 +1,6 @@
 import requests
 import datetime
-<<<<<<< HEAD
-
-=======
 import pandas as pd
->>>>>>> 2d6e7781ffeee87859e70ce413ee72ee490276cc
 from bs4 import BeautifulSoup
 
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
@@ -62,12 +58,12 @@ for j in range(1, 20):  # 페이지
             article_date.append(articles_detail[i].text[3:])
         # print("     i = ", i)
 
+Vader_value_str=[]
 for z in range(len(article_title)):
-    vs = analyzer.polarity_scores(article_title[z])
-    print("{:-<65} {}".format(article_title[z], str(vs)))
+    Vader_value_str.append(analyzer.polarity_scores(article_title[z]))
 
 df = pd.DataFrame({"Title": article_title, "Link": article_link,
-                   "Media": article_media, "Date": article_date})
+                   "Media": article_media, "Date": article_date, "Vader": Vader_value_str})
 
 
-df.to_csv('article.csv', index=False, encoding='UTF-8')
+df.to_csv('InvestingNov1.csv', index=False, encoding='UTF-8')

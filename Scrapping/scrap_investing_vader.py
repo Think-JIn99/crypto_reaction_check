@@ -1,5 +1,6 @@
 import requests
 import datetime
+
 from bs4 import BeautifulSoup
 
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
@@ -53,7 +54,7 @@ for z in range(len(article_title)):
     vs = analyzer.polarity_scores(article_title[z])
     print("{:-<65} {}".format(article_title[z], str(vs)))
 
-# df = pd.DataFrame({"Title": article_title, "Link": article_link,
-#                    "Media": article_media, "Date": article_date})
+df = pd.DataFrame({"Title": article_title, "Link": article_link,
+                   "Media": article_media, "Date": article_date})
 
-# df.to_csv('article.csv', index=False, encoding='UTF-8')
+df.to_csv('article.csv', index=False, encoding='UTF-8')

@@ -1,6 +1,10 @@
 import requests
 import datetime
+<<<<<<< HEAD
 
+=======
+import pandas as pd
+>>>>>>> 2d6e7781ffeee87859e70ce413ee72ee490276cc
 from bs4 import BeautifulSoup
 
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
@@ -10,13 +14,14 @@ analyzer = SentimentIntensityAnalyzer()
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'}
 
+article_label = []
 article_title = []
 article_link = []
 article_media = []
 article_date = []
 dt = datetime.datetime.now()
 
-for j in range(1, 4):  # 페이지
+for j in range(1, 20):  # 페이지
     # print("j = ", j)
 
     url = "https://www.investing.com/news/cryptocurrency-news/{}".format(j)
@@ -27,6 +32,13 @@ for j in range(1, 4):  # 페이지
 
     for i in range(len(articles)):
         article_title.append(articles[i].a.text)  # 제목
+        vs = float(analyzer.polarity_scores(article_title[i])['compound'])
+        if vs >= 0.4:
+            article_label.append('1')
+        elif vs <= -0.4:
+            article_label.append('-1')
+        else: article_label.append('0')
+
         if articles[i].a['href'][:5] == "https":
             article_link.append(articles[i].a['href'])  # 리다이렉트 링크?
         else:
@@ -56,5 +68,6 @@ for z in range(len(article_title)):
 
 df = pd.DataFrame({"Title": article_title, "Link": article_link,
                    "Media": article_media, "Date": article_date})
+
 
 df.to_csv('article.csv', index=False, encoding='UTF-8')

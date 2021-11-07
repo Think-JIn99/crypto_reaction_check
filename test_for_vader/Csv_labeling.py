@@ -1,6 +1,7 @@
 import pandas as pd
-import math
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
+vader_label = []
 
 new_words = {
     'citron': -4.0,
@@ -48,35 +49,18 @@ new_words = {
      'rebound': 1.5,
      'crack': 2.5,}
 
-portion_count = [0]*10  #구간 카운트
-vader = {'title_vader': [], 'selftext_vader': []}   #vader 결과
-df_list = []                                        #csv에서 추출된 친구들
-
 analyzer = SentimentIntensityAnalyzer()
 analyzer.lexicon.update(new_words)
+df = pd.read_csv("comments.csv")
 
-for k in range(1,9):#부족하면 다음 csv파일로
-    df = pd.read_csv("../reddit_scrapper/src/dataset/2020-0{}-01 00_00_00.csv".format(str(k)))
-    for i in df.iloc:
-        vs = analyzer.polarity_scores(i.title)['compound']
-        a = math.floor(float(vs)*5 + 4) #0.2 구간의 인덱스화
-        if portion_count[a] < 100:  #각 구간 count가 100미만인지
-            portion_count[a] = portion_count[a]+1
-            vader['title_vader'].append(float(vs))
-            df_list.append(i.values.tolist())
-            if ((i.selftext == "[deleted]") | (i.selftext == "[removed]")) & (type(i.selftext) is str):#selftext가 [deleted], [removed]
-                vader['selftext_vader'].append('x')
-                continue
-            if i.selftext == '':        #selftext가 공백인 경우
-                vader['selftext_vader'].append('x')
-                continue
-            vs = analyzer.polarity_scores(str(i))['compound']
-            vader['selftext_vader'].append(float(vs))
+for i in df['body']:
+    vs = analyzer.polarity_scores(str(i))['compound']
+    if float(vs) >= 0.3:
+        vader_label.append('1')
+    elif vs <= -0.3:
+        vader_label.append('-1')
+    else:
+        vader_label.append('0')
 
-    if portion_count[9] == 100:     #일반적으로 가장 수가 적은 0.8~1이 100이 되었는지 확인
-        break
-
-
-df2 = pd.concat([pd.DataFrame(df_list, columns= ['id','author','title','selftext','created_utc','num_comments','score']),
-                 pd.DataFrame(vader)], axis=1)
-df2.to_csv('output.csv', index=False, encoding='UTF-8')
+df['vader'] = vader_label
+df.to_csv('output.csv', index=False, encoding='UTF-8')

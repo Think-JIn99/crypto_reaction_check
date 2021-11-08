@@ -67,7 +67,7 @@ for k in range(1,9):#부족하면 다음 csv파일로
             if ((i.selftext == "[deleted]") | (i.selftext == "[removed]")) & (type(i.selftext) is str):#selftext가 [deleted], [removed]
                 vader['selftext_vader'].append('x')
                 continue
-            if i.selftext == '':        #selftext가 공백인 경우
+            elif type(i.selftext) is float:        #selftext가 문자가 아닌 경우
                 vader['selftext_vader'].append('x')
                 continue
             vs = analyzer.polarity_scores(str(i))['compound']

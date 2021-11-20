@@ -60,7 +60,7 @@ class API:
         self.start_point = dt.datetime.strptime(start_point, '%Y-%m-%d')
         self.end_point = dt.datetime.strptime(end_point, '%Y-%m-%d')
 
-        self.con = sqlite3.connect("test.db")
+        self.con = sqlite3.connect("test.db")   # test.db 파일 연결
 
     def convert_to_df(self, submissions) -> pd.DataFrame:
         # 추출할 속성들
@@ -77,28 +77,27 @@ class API:
         return df[::][columns]
 
     def extract_subreddit(self):
-        _after = self.start_point  # 시작점을 의미 합니다. 이 시점 이후로 긁어옴
-        end_point = self.end_point  # 끝점을 의미 합니다. 여기까지 긁는 것이 목표
-        while _after <= end_point:
-            _before = _after + relativedelta(months=1)  # 한달 간격으로 데이터를 읽으므로 한달 뒤를 기준으로 잡아준다.
+        _after = self.start_point  # 시작점을 의미 합니다. 이 시점부터 긁어옴
+        end_point = self.end_point  # 끝점을 의미 합니다. 이 시점까지 긁어옴
+        while _after < end_point:
+            _before = _after + relativedelta(hours=2)  # 긁을 간격을 정하여 _before를 잡아준다.
             try:
-                # 최대 한달동안 업로드된 게시글을 최대 10000개 가져온다.
+                # 업로드된 게시글을 최대 10000개 가져온다.
                 submissions = self.api.search_submissions(subreddit=self.subreddit, limit=10000,
                                                           before=int(_before.timestamp()),
                                                           after=int(_after.timestamp()))
             except:
                 continue
             submissions_df = self.convert_to_df(submissions)  # 데이터 프레임 형태로 변환
-            vader_title_df = self.get_vader_df(submissions_df)
-            submissions_df['title_vader'] = vader_title_df['compound']
-
-            submissions_df.to_sql(_after.strftime("%Y-%m-%d"), self.con)
-
-            # 시작점을 한달 뒤로 미뤄준다.
-            _after += relativedelta(months=1)
+            # title_vader열을 만들어 vader의 compound값 입력
+            submissions_df['title_vader'] = self.get_vader_df(submissions_df)['compound']
+            submissions_df.to_sql(_after.strftime("%Y-%m-%d-%H"), self.con) # 연결한 db에 데이터 프레임 저장
 
             # 콘솔에 진행상황 출력
             typer.echo(f"{self.subreddit}: {_after} ~ {_before}:  one epoch complete!!\n")
+
+            # 시작점을 간격만큼 미뤄준다.
+            _after += relativedelta(hours=2)
 
     def get_vader_df(self, df):
         analyzer = SentimentIntensityAnalyzer()
@@ -121,4 +120,4 @@ def main(subreddit: str, start_point: str, end_point: str):
 
 if __name__ == '__main__':
     typer.run(main)
-#python scrapper_sql.py Bitcoin 2019-10-01 2019-11-01
+#python scrapper_sql.py Bitcoin 2021-11-01 2021-11-02

@@ -81,7 +81,7 @@ class API:
         comments = self.api.search_comments(ids=comment_ids_list)
         comment_list = [comments for comments in comments]
         comments_df = self.comments_to_df(comment_list)  # 데이터 프레임 형태로 변환
-        # vader열을 만들어 vader의 compound값 입력
+        # vader 열을 만들어 vader 의 compound값 입력
         comments_df['vader'] = self.get_vader_df(comments_df['body'])['compound']
         #comments_df.to_sql(_after.strftime("%Y-%m-%d-%H"), self.con) # 연결한 db에 데이터 프레임 저장
         pd.set_option('display.max_columns', None)

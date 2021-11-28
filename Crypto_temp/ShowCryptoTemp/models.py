@@ -1,7 +1,7 @@
 from django.db import models
 
 
-class ShowCryptoTemp(models.Model):
+class ShowCryptoTemp(models.Model): # 크립토 온도 측정해서 보여주는 클래스
     CryptoName = models.CharField(max_length=200)
     CryptoTemperture = models.IntegerField(default=0)
     pub_date = models.DateTimeField('date published')
@@ -10,7 +10,7 @@ class ShowCryptoTemp(models.Model):
         return self.CryptoName
 
 
-class scrapper(models.Model):
+class scrapper(models.Model): # 스크래퍼
     post_id = models.CharField(max_length=10)
     author = models.CharField(max_length=100)
     title = models.TextField()

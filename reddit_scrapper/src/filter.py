@@ -27,8 +27,8 @@ def get_valid_df(df):
     valid_index = remove_pattern(df, patterns, column_name)
     return df.loc[valid_index]
 
-def main(subreddit:str, is_title:bool):
-    if is_title:
+def main(subreddit:str, is_title:str):
+    if is_title == 'Y' or is_title == 'y':
         path = f'../dataset/raw_data/title_data/{subreddit}'
     else:
         path = f'../dataset/raw_data/comment_data/{subreddit}'
@@ -50,4 +50,5 @@ def main(subreddit:str, is_title:bool):
             print(f'{e} got some problem')
             continue
 if __name__ == '__main__':
+    typer.echo("input subreddit name and choose data type is title (y/n)")
     typer.run(main)

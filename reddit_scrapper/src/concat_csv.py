@@ -1,6 +1,6 @@
 import pandas as pd
 import os
-def concat_csv(subreddit, path):
+def concat_csv(path):
     li = []
     for f in os.listdir(path):
         df = pd.read_csv(f"{path}/{f}",index_col = None, header=0)

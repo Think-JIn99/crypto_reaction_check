@@ -4,7 +4,7 @@ import re
 import typer
 import os
 from apply_vader import get_vader_df
-
+#명령어 subreddit title,comment 여부 입력으로 실행
 def read_file(path):
     df = pd.read_csv(path)
     df = df.drop_duplicates(['title'],keep='first') #중복 처리를 해준다.
@@ -29,9 +29,9 @@ def get_valid_df(df):
 
 def main(subreddit:str, is_title:bool):
     if is_title:
-        path = f'../dataset/title_data/{subreddit}'
+        path = f'../dataset/raw_data/title_data/{subreddit}'
     else:
-        path = f'../dataset/comment_data/{subreddit}'
+        path = f'../dataset/raw_data/comment_data/{subreddit}'
     if not os.path.exists(path):
         os.mkdir(path)
     for f in os.listdir(path):

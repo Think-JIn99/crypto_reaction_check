@@ -1,3 +1,4 @@
+from logging import exception
 from os import path
 from pmaw import PushshiftAPI #없으면 설치 해야해요 pip로 설치
 import pandas as pd
@@ -34,10 +35,11 @@ class API:
             try:
                 #최대 한달동안 업로드된 게시글을 최대 10000개 가져온다. 
                 submissions = self.api.search_submissions(subreddit = self.subreddit, limit = 10000, before = int(_before.timestamp()), after = int(_after.timestamp()))
-            except:
+            except Exception as e:
+                print(e)
                 continue
             submissions_df = self.convert_to_df(submissions) #데이터 프레임 형태로 변환
-            file_name = f'{path}/{_after}.csv'
+            file_name = f'{path}/{_after.strftime("%Y-%m-%d")}.csv'
             #데이터 프레임을 csv 파일로 작성한다.
             if os.path.exists(file_name):
                 submissions_df.to_csv(file_name, sep = ',', mode ='a', header = False, index = False)
@@ -53,7 +55,7 @@ class API:
 def main(subreddit:str, start_point:str, end_point:str):
     #스크래퍼 객체 생성
     api = API(subreddit,start_point,end_point)
-    path = f'../dataset/title_dataset/{subreddit}'
+    path = f'../dataset/raw_data/title_data/{subreddit}'
     if not os.path.exists(path):
         os.mkdir(f'{path}')
     typer.echo(f"{api.subreddit}: {api.start_point} ~ {api.end_point} start scrapping")

@@ -3,11 +3,15 @@ import pandas as pd
 import re
 import typer
 import os
-from apply_vader import get_vader_df
-#명령어 subreddit title,comment 여부 입력으로 실행
+from apply_vader import get_vader_df #명령어 subreddit title,comment 여부 입력으로 실행
+from remove_word import get_word_patt
 def read_file(path):
     df = pd.read_csv(path)
+    if "selftext" in df.columns:
+        df.drop('selftext',axis=1,inplace=True)
     df = df.drop_duplicates(['title'],keep='first') #중복 처리를 해준다.
+    df['title'] = df['title'].replace(r"[^a-zA-Z ]",'',regex=True)#문자 형태의 데이터만 남긴다.
+    df.dropna(subset=['title'], inplace=True) #여백 및 결측치를 제거해준다.
     return df
 
 def remove_pattern(df, patterns, column_name):
@@ -19,11 +23,10 @@ def remove_pattern(df, patterns, column_name):
         res = res & valid_index
     return res
 
+    
 def get_valid_df(df):
     column_name = 'title'
-    url_patt = "(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}"
-    word_patt  = r'\bfree\b|\binstall\b|\bdownload\b|\bapp\b|\bwallet\b|\bhardware\b|\blink\b|\bcard\b|\bpayapl\b|\bmine\b|\bplatform\b|\bbrowser\b|\bsite\b'
-    patterns = [url_patt,word_patt]
+    patterns =  get_word_patt()
     valid_index = remove_pattern(df, patterns, column_name)
     return df.loc[valid_index]
 
@@ -37,7 +40,6 @@ def main(subreddit:str, is_title:str):
     for f in os.listdir(path):
         try:
             df = read_file(f"{path}/{f}")
-            df.drop('selftext',axis=1,inplace=True)
             typer.echo(f"{f}: start processing")
             total_cnt = df.shape[0]
             df = get_valid_df(df)
@@ -47,8 +49,8 @@ def main(subreddit:str, is_title:str):
             df.to_csv(f'{path}/{f}')
             typer.echo(f"{f}: end processing (total: {total_cnt} removed: {removed_cnt})")
         except Exception as e:
-            print(f'{e} got some problem')
+            typer.echo(e)
             continue
+        
 if __name__ == '__main__':
-    typer.echo("input subreddit name and choose data type is title (y/n)")
     typer.run(main)

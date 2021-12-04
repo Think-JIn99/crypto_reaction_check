@@ -25,7 +25,7 @@ class API:
         return df[::][columns]
 
     def extract_comments(self, post_ids, f_name):  # try except 넣어야할지 고민중
-        _before = dt.datetime.strptime(f_name.split(' ')[0], '%Y-%m-%d')
+        _before = dt.datetime.strptime(f_name.rstrip('.csv'), '%Y-%m-%d')
         _after = _before + relativedelta(months=1)
 
         start = time.time()
@@ -55,8 +55,12 @@ class API:
         file_list = os.listdir(path)
         for f in file_list:
             print(f)
-            df = pd.read_csv(f"{path}{f}")
-            self.extract_comments(df.id, f)
+            if f in os.listdir('./filter_scrap_data/comment_data/'):
+                print('pass')
+                continue
+            else:
+                df = pd.read_csv(f"{path}{f}")
+                self.extract_comments(df.id, f)
 
 
 def main():

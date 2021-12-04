@@ -64,7 +64,7 @@ class API:
     def submissions_to_df(self, submissions) -> pd.DataFrame:
         # 추출할 속성들
         columns = [
-            'id',
+            'post_id',
             'author',
             'title',
             'selftext',

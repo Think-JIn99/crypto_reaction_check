@@ -9,7 +9,7 @@ __pycache__/
 # Distribution / packaging
 tempCodeRunnerFile.py
 .Python
-.DS_Store
+.DS_Store/
 build/
 develop-eggs/
 dist/

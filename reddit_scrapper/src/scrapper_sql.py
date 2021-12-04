@@ -64,7 +64,7 @@ class API:
     def submissions_to_df(self, submissions) -> pd.DataFrame:
         # 추출할 속성들
         columns = [
-            'post_id',
+            'id',
             'author',
             'title',
             'selftext',
@@ -78,7 +78,6 @@ class API:
     def comments_to_df(self, submissions) -> pd.DataFrame:
         # 추출할 속성들
         columns = [
-            'id',
             'body',
             'created_utc',
             'score',
@@ -114,13 +113,14 @@ class API:
             submissions_df = self.submissions_to_df(submissions)  # 데이터 프레임 형태로 변환
             # vader열을 만들어 vader의 compound값 입력
             submissions_df['vader'] = self.get_vader_df(submissions_df['title'])['compound']
+            submissions_df.rename(columns={'id': 'post_id'}, inplace=True)  # 장고에 id가 기본으로 쓰이므로 post_id로 수정
             submissions_df.to_sql(_after.strftime("submission"),
                                   con=self.con, if_exists='append', chunksize=4000, method='multi')
 
             # 콘솔에 진행상황 출력
             typer.echo(f"{self.subreddit}: {_after} ~ {_before}:  one epoch complete!!\n")
 
-            post_ids = submissions_df['id']  # post ids 추출
+            post_ids = submissions_df['post_id']  # post ids 추출
             self.extract_comments(post_ids, _after)  # post ids로 comments 받아옴
 
             # 시작점을 간격만큼 미뤄준다.

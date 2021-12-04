@@ -11,7 +11,8 @@ class ShowCryptoTemp(models.Model): # 크립토 온도 측정해서 보여주는
 
 
 class scrapper(models.Model): # 스크래퍼
-    post_id = models.CharField(max_length=10)
+    index = models.AutoField(primary_key=True)
+    id = models.CharField(max_length=10)
     author = models.CharField(max_length=100)
     title = models.TextField()
     selftext = models.TextField()

@@ -1,12 +1,12 @@
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from .models import *
+import json
 from pmaw import PushshiftAPI  # 없으면 설치 해야해요 pip로 설치
+import praw
 import pandas as pd
-import os.path
 import datetime as dt
-import typer  # 없으면 설치 해야해요 pip로 설치
-import sqlite3
+import typer
 from dateutil.relativedelta import relativedelta
 
 
@@ -36,70 +36,36 @@ def index(request):
     # return HttpResponse(Bitcoin_temp)
     return render(request,"ShowCryptoTemp/about.html",context)
 
-def PandasToDjango(request):
-    class API:
-        def __init__(self, subreddit):
-            self.api = PushshiftAPI()  # api 객체 생성
-            self.subreddit = subreddit  # 갤러리 이름
-            # self.con = sqlite3.connect("ShowCryptoTemp_showcryptotemp")  # db 파일 연결
+def Praw(request):
+    reddit = praw.Reddit(
+        client_id="_i0Z1_b3Xs0LGPdfGqt3JQ",
+        client_secret="iplaFZ16URV1GQVtBpAaWaCg9V51pA",
+        user_agent="CryptoScrap by /u/LunarJun",
+    )
 
-        def submissions_to_df(self, submissions) -> pd.DataFrame:
-            # 추출할 속성들
-            columns = [
-                'id',
-                'author',
-                'title',
-                'selftext',
-                'created_utc',
-                'num_comments',
-                'score',
-            ]
-            df = pd.DataFrame(submissions)
-            return df[::][columns]
+    def submission_to_df(submission) -> pd.DataFrame:
+        df = pd.DataFrame({'post_id': [submission.id],
+                           'title': [submission.title],
+                           'created_utc': [submission.created_utc]})
+        return df[::][::]
 
-        def comments_to_df(self, submissions) -> pd.DataFrame:
-            # 추출할 속성들
-            columns = [
-                'body',
-                'created_utc',
-                'score',
-                'link_id',
-                'parent_id',
-            ]
-            df = pd.DataFrame(submissions)
-            return df[::][columns]
+    subreddit = reddit.subreddit("Bitcoin")
+    submissions_df = pd.DataFrame()
+    for submission in subreddit.new(limit=100):
+        submissions_df = submissions_df.append(submission_to_df(submission))
 
-        def extract_comments(self, post_ids, _after):   # try except 넣어야할지 고민중
-            comment_ids = self.api.search_submission_comment_ids(ids=post_ids)  # post ids로 comment ids 받아옴
-            comment_ids_list = [comment_ids for comment_ids in comment_ids] # comment ids 리스트화
-            comments = self.api.search_comments(ids=comment_ids_list)   # comment ids로 comments 받아옴
-            comment_list = [comments for comments in comments]  # comments 리스트화
-            comments_df = self.comments_to_df(comment_list)  # 데이터 프레임 형태로 변환
+    df = submissions_df.values.tolist()
+    listdf = []
+    for row in df:
+        listdf.append(scrapper(post_id = row[0],
+                 title = row[1],
+                 created_utc = row[2]
+                 ))
 
-        def extract_subreddit(self):
-            now = dt.datetime.now().strftime('%Y-%m-%d')
-            before = now - relativedelta(hours=1)
+    scrapper.objects.bulk_create(listdf)
 
-            try:
-                # 업로드된 게시글을 최대 10000개 가져온다.
-                submissions = self.api.search_submissions(subreddit=self.subreddit, limit=10000,
-                                                          before=int(now.timestamp()),
-                                                          after=int(before.timestamp()))
-            except:
-                pass
-            submissions_df = self.submissions_to_df(submissions)  # 데이터 프레임 형태로 변환
-            submissions_df.rename(columns={'id': 'post_id'}, inplace=True)  # 장고에 id가 기본으로 쓰이므로 post_id로 수정
-            typer.echo(f"{self.subreddit}: {now} ~ {before}:  one epoch complete!!\n")
-            # post_ids = submissions_df['post_id']  # post ids 추출
-            # self.extract_comments(post_ids, now)  # post ids로 comments 받아옴
+    # scrapper_df_to_model = scrapper()
+    # scrapper_df_to_model.myList = json.dumps(df)
+    # scrapper_df_to_model.save()
 
-            return submissions_df[::]
-
-    subreddit = "Bitcoin"
-    api = API(subreddit)
-    data = api.extract_subreddit()
-    context = {
-        'df': data,
-            }
-
-    return HttpResponse(data)
+    return HttpResponse("success")

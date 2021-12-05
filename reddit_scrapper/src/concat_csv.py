@@ -21,4 +21,4 @@ if __name__ == '__main__':
         column_name = 'body'
     res = concat_csv(path,column_name)
     res = res.drop_duplicates([column_name],keep='first')
-    res.to_csv(f'{path}/_train.csv',index=None)
+    res.to_csv(f'{path}/{subreddit}_train.csv',index=None)

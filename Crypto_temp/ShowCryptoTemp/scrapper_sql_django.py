@@ -1,11 +1,9 @@
-from pmaw import PushshiftAPI  # 없으면 설치 해야해요 pip로 설치
+import praw
 import pandas as pd
-import os.path
 import datetime as dt
-import typer  # 없으면 설치 해야해요 pip로 설치
 import sqlite3
-from dateutil.relativedelta import relativedelta
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from praw.models import MoreComments
 
 new_words = {
     'citron': -4.0,
@@ -51,74 +49,45 @@ new_words = {
     'hot': 1.5,
     'drop': -2.5,
     'rebound': 1.5,
-    'crack': 2.5,}
+    'crack': 2.5
+}
 
-class API:
-    def __init__(self, subreddit):
-        self.api = PushshiftAPI()  # api 객체 생성
-        self.subreddit = subreddit  # 갤러리 이름
-        self.con = sqlite3.connect("ShowCryptoTemp_showcryptotemp")   # db 파일 연결
 
-    def submissions_to_df(self, submissions) -> pd.DataFrame:
-        # 추출할 속성들
-        columns = [
-            'id',
-            'author',
-            'title',
-            'selftext',
-            'created_utc',
-            'num_comments',
-            'score',
-        ]
-        df = pd.DataFrame(submissions)
-        return df[::][columns]
+class Praw:
+    def __init__(self):  # 매개변수 subreddit 추가 가능
+        subreddit = 'Bitcoin'
+        self.now = dt.datetime.now()
+        self.reddit = self.praw_connect()
+        self.subreddit = self.praw_connect().subreddit(subreddit)  # 갤러리 이름
+        self.con = sqlite3.connect("ShowCryptoTemp_showcryptotemp")  # db 파일 연결
 
-    def comments_to_df(self, submissions) -> pd.DataFrame:
-        # 추출할 속성들
-        columns = [
-            'body',
-            'created_utc',
-            'score',
-            'link_id',
-            'parent_id',
-        ]
-        df = pd.DataFrame(submissions)
-        return df[::][columns]
+    def praw_connect(self):
+        reddit = praw.Reddit(
+            client_id="_i0Z1_b3Xs0LGPdfGqt3JQ",
+            client_secret="iplaFZ16URV1GQVtBpAaWaCg9V51pA",
+            user_agent="CryptoScrap by /u/LunarJun")
+        if reddit.read_only:
+            return reddit
 
-    def extract_comments(self, post_ids):   # try except 넣어야할지 고민중
-        comment_ids = self.api.search_submission_comment_ids(ids=post_ids)  # post ids로 comment ids 받아옴
-        comment_ids_list = [comment_ids for comment_ids in comment_ids] # comment ids 리스트화
-        comments = self.api.search_comments(ids=comment_ids_list)   # comment ids로 comments 받아옴
-        comment_list = [comments for comments in comments]  # comments 리스트화
-        comments_df = self.comments_to_df(comment_list)  # 데이터 프레임 형태로 변환
-        # vader열을 만들어 vader의 compound값 입력
-        comments_df['vader'] = self.get_vader_df(comments_df['body'])['compound']
-        comments_df.to_sql("comment",
-                           con=self.con, if_exists='append', chunksize=1000, method='multi')
+    def submission_to_df(self, submission) -> pd.DataFrame:
+        df = pd.DataFrame({'id': [submission.id],
+                           'title': [submission.title],
+                           'created_utc': [submission.created_utc]})
+        return df[::][::]
 
-    def extract_subreddit(self):
-        now = dt.datetime.now().strftime('%Y-%m-%d')
-        before = now - relativedelta(hours=1)
+    def comment_to_df(self, comment) -> pd.DataFrame:
+        df = pd.DataFrame({'body': [comment.body],
+                           'submission': [comment.submission],
+                           'created_utc': [comment.created_utc], })
+        return df[::][::]
 
-        try:
-            # 업로드된 게시글을 최대 10000개 가져온다.
-            submissions = self.api.search_submissions(subreddit=self.subreddit, limit=10000,
-                                                      before=int(now.timestamp()),
-                                                      after=int(before.timestamp()))
-        except:
-            pass
-        submissions_df = self.submissions_to_df(submissions)  # 데이터 프레임 형태로 변환
-        # vader열을 만들어 vader의 compound값 입력
-        submissions_df['vader'] = self.get_vader_df(submissions_df['title'])['compound']
-        submissions_df.rename(columns={'id': 'post_id'}, inplace=True)  # 장고에 id가 기본으로 쓰이므로 post_id로 수정
-        submissions_df.to_sql("submission",
-                              con=self.con, if_exists='append', chunksize=4000, method='multi')
-
-        # 콘솔에 진행상황 출력
-        typer.echo(f"{self.subreddit}: {now} ~ {before}:  one epoch complete!!\n")
-
-        post_ids = submissions_df['post_id']  # post ids 추출
-        self.extract_comments(post_ids, now)  # post ids로 comments 받아옴
+    def utc_60min(self, now, then):
+        min_diff = (now - dt.datetime.fromtimestamp(then)).seconds / 60
+        print(int(min_diff))
+        if int(min_diff) < 60:
+            return True
+        else:
+            return False
 
     def get_vader_df(self, df):
         analyzer = SentimentIntensityAnalyzer()
@@ -128,17 +97,32 @@ class API:
         vader_df = pd.DataFrame(dict(vader)).T
         return vader_df  # vader실행 결과를 반환해준다.
 
+    def extract_sub_comt(self):
+        submissions_df = pd.DataFrame()
+        comments_df = pd.DataFrame()
+        for submission in self.subreddit.new(limit=20):
+            if not self.utc_30min(self.now, submission.created_utc):
+                continue
+            submissions_df = submissions_df.append(self.submission_to_df(submission))
+            for comment in submission.comments:
+                if isinstance(comment, MoreComments):
+                    continue
+                comments_df = comments_df.append(self.comment_to_df(comment))
 
-def main(subreddit: str):
-    # 스크래퍼 객체 생성
-    api = API(subreddit)
-    if not os.path.exists(f'./dataset'):
-        os.mkdir(f'./dataset')
-    typer.echo(f"{api.subreddit}: start scrapping")
-    api.extract_subreddit()
-    api.con.close()
+        print(submissions_df)
+        print(comments_df)
+
+        submissions_df['vader'] = self.get_vader_df(submissions_df['title'])['compound']
+        submissions_df.rename(columns={'id': 'post_id'}, inplace=True)  # 장고에 id가 기본으로 쓰이므로 post_id로 수정
+        submissions_df.to_sql("submission",
+                              con=self.con, if_exists='append', chunksize=4000, method='multi')
+
+        comments_df['vader'] = self.get_vader_df(comments_df['body'])['compound']
+        comments_df.to_sql("comment",
+                           con=self.con, if_exists='append', chunksize=1000, method='multi')
 
 
 if __name__ == '__main__':
-    typer.run(main)
-# python scrapper_sql.py Bitcoin
+    scrapper = Praw()
+    scrapper.extract_sub_comt()
+    scrapper.con.close()

@@ -30,6 +30,7 @@ include_words = [
     ]
 url_patt = r"(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}"
 nan_patt = r"(^.?removed.?$)|(^.?deleted.?$)" #결측치 제거용
+remove_patterns = [url_patt, nan_patt]
 def get_word_patt(is_remove = True):
     if is_remove:
         words = remove_words

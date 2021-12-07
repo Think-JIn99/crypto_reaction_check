@@ -14,6 +14,7 @@ class scrapper(models.Model): # 스크래퍼
     post_id = models.CharField(max_length=10)
     title = models.TextField()
     created_utc = models.IntegerField(null=True)
+    predict_value = models.IntegerField(null=True)
 
     def __str__(self):
         return self.title

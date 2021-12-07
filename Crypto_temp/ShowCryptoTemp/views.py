@@ -333,27 +333,70 @@ def Praw(request):
         df = pd.DataFrame(data)
         return df[::][::]
 
-    subreddit = reddit.subreddit("Bitcoin")
-    submissions_dataframe = pd.DataFrame()
-    submissions_df = pd.DataFrame(columns=['post_id', 'title', 'created_utc', 'predict_value'])
-    for submission in subreddit.new(limit=100):
-        submissions_dataframe = submissions_dataframe.append(submission_to_df(submission))
-    submissions_dataframe = filter_for_sql_main(submissions_dataframe)
-    submissions_df = pd.concat([submissions_df, submissions_dataframe], ignore_index=True)
-    submissions_df['predict_value'] = 0
-    submissions_df = ModelPredict(submissions_df)
-    df = submissions_df.values.tolist()
-    # logit_test = test_sentences((["El Salvador Bought  Bitcoins In The Dip"]))
-    print(submissions_df)
-    listdf = []
-    for row in df:
-        listdf.append(scrapper(post_id=row[0],
-                               title=row[1],
-                               created_utc=row[2],
-                               predict_value=row[3]
-                               ))
+    def Subreddit_scrapper(Subreddit_name):
+        subreddit = reddit.subreddit(Subreddit_name)
+        submissions_dataframe = pd.DataFrame()
+        submissions_df = pd.DataFrame(columns=['post_id', 'title', 'created_utc', 'predict_value'])
+        for submission in subreddit.new(limit=100):
+            submissions_dataframe = submissions_dataframe.append(submission_to_df(submission))
+        submissions_dataframe = filter_for_sql_main(submissions_dataframe)
+        submissions_df = pd.concat([submissions_df, submissions_dataframe], ignore_index=True)
+        submissions_df['predict_value'] = 0
+        submissions_df = ModelPredict(submissions_df)
+        df = submissions_df.values.tolist()
+        # logit_test = test_sentences((["El Salvador Bought  Bitcoins In The Dip"]))
+        print(submissions_df)
+        listdf = []
 
-    scrapper.objects.bulk_create(listdf)
+        if Subreddit_name =="Bitcoin":
+            for row in df:
+                listdf.append(Scrapper_bitcoin(post_id=row[0],
+                                       title=row[1],
+                                       created_utc=row[2],
+                                       predict_value=row[3]
+                                       ))
+            Scrapper_bitcoin.objects.bulk_create(listdf)
+        elif Subreddit_name =="ethereum":
+            for row in df:
+                listdf.append(Scrapper_Ethereum(post_id=row[0],
+                                       title=row[1],
+                                       created_utc=row[2],
+                                       predict_value=row[3]
+                                       ))
+            Scrapper_Ethereum.objects.bulk_create(listdf)
+        elif Subreddit_name == "doge":
+            for row in df:
+                listdf.append(Scrapper_doge(post_id=row[0],
+                                                title=row[1],
+                                                created_utc=row[2],
+                                                predict_value=row[3]
+                                                ))
+            Scrapper_doge.objects.bulk_create(listdf)
+
+        elif Subreddit_name == "Ripple":
+            for row in df:
+                listdf.append(Scrapper_ripple(post_id=row[0],
+                                                title=row[1],
+                                                created_utc=row[2],
+                                                predict_value=row[3]
+                                                ))
+            Scrapper_ripple.objects.bulk_create(listdf)
+
+        elif Subreddit_name == "cardano":
+            for row in df:
+                listdf.append(Scrapper_doge(post_id=row[0],
+                                                title=row[1],
+                                                created_utc=row[2],
+                                                predict_value=row[3]
+                                                ))
+            Scrapper_doge.objects.bulk_create(listdf)
+
+    Subreddit_scrapper("Bitcoin")
+    Subreddit_scrapper("ethereum")
+    Subreddit_scrapper("doge")
+    Subreddit_scrapper("Ripple")
+    Subreddit_scrapper("cardano")
+
 
     # scrapper_df_to_model = scrapper()
     # scrapper_df_to_model.myList = json.dumps(df)

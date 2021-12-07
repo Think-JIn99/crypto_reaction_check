@@ -1,25 +1,8 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
-
-
 import torch
-
 from transformers import BertTokenizer
-from transformers import BertForSequenceClassification, AdamW, BertConfig
-from transformers import get_linear_schedule_with_warmup
-from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from sklearn.model_selection import train_test_split
-
-import pandas as pd
 import numpy as np
-import random
-import time
-import datetime
-import re
-import os
+
 device = torch.device('cpu')
 model=torch.load('homebitcoinmodel',map_location=device)
 tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-cased', do_lower_case=False)
@@ -78,15 +61,17 @@ def test_sentences(sentences):
     logits = logits.detach().cpu().numpy()
 
     return logits
-for x in range(int(len(test))):
-    logits = test_sentences([test['title'][x]])#이 부분을 바꾸시면 됩니다 해당 dataframe으로
-    if np.argmax(logits) == 1 :
-        result.loc[x,'label']=1#이 부분을 바꾸시면 됩니다 해당 dataframe으로
-        continue
-    elif np.argmax(logits) == 0 :
-        result.loc[x,'label']=0#이 부분을 바꾸시면 됩니다 해당 dataframe으로
-        continue
-    elif np.argmax(logits) == 2 :
-        result.loc[x,'label']=-1#이 부분을 바꾸시면 됩니다 해당 dataframe으로
-        continue
+
+def ModelPridict(df):
+    for x in range(int(len(df))):
+        logits = test_sentences([df['title'][x]])#이 부분을 바꾸시면 됩니다 해당 dataframe으로
+        if np.argmax(logits) == 1 :
+            df.loc[x,'pridict_value']=1#이 부분을 바꾸시면 됩니다 해당 dataframe으로
+            continue
+        elif np.argmax(logits) == 0 :
+            df.loc[x,'pridict_value']=0#이 부분을 바꾸시면 됩니다 해당 dataframe으로
+            continue
+        elif np.argmax(logits) == 2 :
+            df.loc[x,'pridict_value']=-1#이 부분을 바꾸시면 됩니다 해당 dataframe으로
+            continue
 

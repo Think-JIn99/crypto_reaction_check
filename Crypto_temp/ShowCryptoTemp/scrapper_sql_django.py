@@ -101,7 +101,7 @@ class Praw:
         submissions_df = pd.DataFrame()
         comments_df = pd.DataFrame()
         for submission in self.subreddit.new(limit=20):
-            if not self.utc_30min(self.now, submission.created_utc):
+            if not self.utc_60min(self.now, submission.created_utc):
                 continue
             submissions_df = submissions_df.append(self.submission_to_df(submission))
             for comment in submission.comments:

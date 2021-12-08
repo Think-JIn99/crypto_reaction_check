@@ -6,7 +6,7 @@ import pandas as pd
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import numpy as np
 import re
-import os
+import datetime as dt
 import torch
 from transformers import BertTokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
@@ -356,6 +356,37 @@ def Praw(request):
                                        predict_value=row[3]
                                        ))
             Scrapper_bitcoin.objects.bulk_create(listdf)
+
+            df2 = pd.DataFrame({'period': [], 'pos': [], 'neg': []})  # period별 결과값을 넣을 dataframe
+
+            for i in submissions_df.iloc:  # 행마다 반복
+                now = dt.datetime.now()  # 일단 하루단위
+                min_diff = (now - dt.datetime.fromtimestamp(i.created_utc)).total_seconds() / 60 / 60 / 24
+                if (df2['period'] == int(min_diff)).any():
+                    if i.predict_value > 0.5:  # title_vader 모델결과로 바꾸면됨
+                        df2.loc[(df2['period'] == int(min_diff)), 'pos'] += 1
+                    elif i.predict_value < -0.5:
+                        df2.loc[(df2['period'] == int(min_diff)), 'neg'] += 1
+                else:
+                    df2 = df2.append({'period': int(min_diff), 'pos': 0, 'neg': 0}, ignore_index=True)
+
+            df2 = df2.sort_values(by='period', ascending=True)  # 최근부터 오름차순 정렬
+            df2 = df2.set_index('period')  # index period로
+
+            df2['axis'] = df2['pos'] / (df2['pos'] + df2['neg']) * 100  # 그냥 비율
+            data_std = (df2['axis'] - df2['axis'].min()) / (df2['axis'].max() - df2['axis'].min())  # 정규화
+            df2['axis'] -= 20  # 평균이 70정도라 20빼줌    기간이 짧으면 0 이하로 튈수 있음
+
+            cryptotempname = ShowCryptoTemp.objects.get(pk =1)
+            print(cryptotempname.CryptoTemperture)
+            df2 = df2.fillna(50)
+            print(df2.head(100))
+            print(df2.iloc[[0],[2]])
+            df3 = df2.iloc[[0],[2]]
+            cryptotempname.CryptoTemperture = int(df3['axis'][0])
+            cryptotempname.save()
+
+
         elif Subreddit_name =="ethereum":
             for row in df:
                 listdf.append(Scrapper_Ethereum(post_id=row[0],
@@ -364,6 +395,36 @@ def Praw(request):
                                        predict_value=row[3]
                                        ))
             Scrapper_Ethereum.objects.bulk_create(listdf)
+
+            df2 = pd.DataFrame({'period': [], 'pos': [], 'neg': []})  # period별 결과값을 넣을 dataframe
+
+            for i in submissions_df.iloc:  # 행마다 반복
+                now = dt.datetime.now()  # 일단 하루단위
+                min_diff = (now - dt.datetime.fromtimestamp(i.created_utc)).total_seconds() / 60 / 60 / 24
+                if (df2['period'] == int(min_diff)).any():
+                    if i.predict_value > 0.5:  # title_vader 모델결과로 바꾸면됨
+                        df2.loc[(df2['period'] == int(min_diff)), 'pos'] += 1
+                    elif i.predict_value < -0.5:
+                        df2.loc[(df2['period'] == int(min_diff)), 'neg'] += 1
+                else:
+                    df2 = df2.append({'period': int(min_diff), 'pos': 0, 'neg': 0}, ignore_index=True)
+
+            df2 = df2.sort_values(by='period', ascending=True)  # 최근부터 오름차순 정렬
+            df2 = df2.set_index('period')  # index period로
+
+            df2['axis'] = df2['pos'] / (df2['pos'] + df2['neg']) * 100  # 그냥 비율
+            data_std = (df2['axis'] - df2['axis'].min()) / (df2['axis'].max() - df2['axis'].min())  # 정규화
+            df2['axis'] -= 20  # 평균이 70정도라 20빼줌    기간이 짧으면 0 이하로 튈수 있음
+
+            cryptotempname = ShowCryptoTemp.objects.get(pk = 2)
+            print(cryptotempname.CryptoTemperture)
+            df2 = df2.fillna(50)
+            print(df2.head(100))
+            print(df2.iloc[[0], [2]])
+            df3 = df2.iloc[[0], [2]]
+            cryptotempname.CryptoTemperture = int(df3['axis'][0])
+            cryptotempname.save()
+
         elif Subreddit_name == "doge":
             for row in df:
                 listdf.append(Scrapper_doge(post_id=row[0],
@@ -372,6 +433,35 @@ def Praw(request):
                                                 predict_value=row[3]
                                                 ))
             Scrapper_doge.objects.bulk_create(listdf)
+
+            df2 = pd.DataFrame({'period': [], 'pos': [], 'neg': []})  # period별 결과값을 넣을 dataframe
+
+            for i in submissions_df.iloc:  # 행마다 반복
+                now = dt.datetime.now()  # 일단 하루단위
+                min_diff = (now - dt.datetime.fromtimestamp(i.created_utc)).total_seconds() / 60 / 60 / 24
+                if (df2['period'] == int(min_diff)).any():
+                    if i.predict_value > 0.5:  # title_vader 모델결과로 바꾸면됨
+                        df2.loc[(df2['period'] == int(min_diff)), 'pos'] += 1
+                    elif i.predict_value < -0.5:
+                        df2.loc[(df2['period'] == int(min_diff)), 'neg'] += 1
+                else:
+                    df2 = df2.append({'period': int(min_diff), 'pos': 0, 'neg': 0}, ignore_index=True)
+
+            df2 = df2.sort_values(by='period', ascending=True)  # 최근부터 오름차순 정렬
+            df2 = df2.set_index('period')  # index period로
+
+            df2['axis'] = df2['pos'] / (df2['pos'] + df2['neg']) * 100  # 그냥 비율
+            data_std = (df2['axis'] - df2['axis'].min()) / (df2['axis'].max() - df2['axis'].min())  # 정규화
+            df2['axis'] -= 20  # 평균이 70정도라 20빼줌    기간이 짧으면 0 이하로 튈수 있음
+
+            cryptotempname = ShowCryptoTemp.objects.get(pk =3)
+            print(cryptotempname.CryptoTemperture)
+            df2 = df2.fillna(50)
+            print(df2.head(100))
+            print(df2.iloc[[0], [2]])
+            df3 = df2.iloc[[0], [2]]
+            cryptotempname.CryptoTemperture = int(df3['axis'])
+            cryptotempname.save()
 
     Subreddit_scrapper("Bitcoin")
     Subreddit_scrapper("ethereum")

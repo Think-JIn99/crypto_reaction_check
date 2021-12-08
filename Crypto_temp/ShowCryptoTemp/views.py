@@ -1,9 +1,7 @@
-from django.http import HttpResponse
 from django.shortcuts import render
 from .models import *
 import praw
 import pandas as pd
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import numpy as np
 import re
 import datetime as dt
@@ -11,190 +9,183 @@ import torch
 from transformers import BertTokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
+new_words = {
+    'decline': -2.0,
+    'declines': -2.0,
+    'declined': -2.0,
+    'incline': 2.0,
+    'inclines': 2.0,
+    'inclined': 2.0,
+    'mainiac': 3.0,
+    'moon': 4.0,
+    'moons': 4.0,
+    'high': 2.0,
+    'slip': -1.0,
+    'slipped': -1.0,
+    'mooning': 4.0,
+    'long': 2.0,
+    'longs': 2.0,
+    'short': -2.0,
+    'shorts': -2.0,
+    'lose': -2.0,
+    'loss': -2.0,
+    'lost': -2.0,
+    'volatile': -2.0,
+    'volatiles': -2.0,
+    'weak': -2.0,
+    'weaken': -2.0,
+    'strong': 2.0,
+    'fall': -2.0,
+    'fallen': -2.0,
+    'falls': -2.0,
+    'fell': -2.0,
+    'doom': -3.0,
+    'climb': 2.0,
+    'climbs': 2.0,
+    'climbed': 2.0,
+    'climbing': 2.0,
+    'tumble': -2.0,
+    'tumbles': -2.0,
+    'tumbled': -2.0,
+    'tumbling': -2.0,
+    'fear': -2.0,
+    'plunge': -2.0,
+    'recession': -2.0,
+    'plunges': -2.0,
+    'plunged': -2.0,
+    'inches': 2.0,
+    'record': 2.0,
+    'ralie': 2.0,
+    'ralies': 2.0,
+    'ralied': 2.0,
+    'above': 2.0,
+    'aboves': 2.0,
+    'hit': 1.3,
+    'hits': 1.3,
+    'hitting': 1.3,
+    'hodl': 2.0,
+    'ATH': 3.0,
+    'call': 2.0,
+    'dip': -2.0,
+    'ponzi': -3.0,
+    'break': 2.0,
+    'breaks': 2.0,
+    'tendie': 2.0,
+    'surge': 2.0,
+    'surges': 2.0,
+    'surged': 2.0,
+    'overvalue': -3.0,
+    'overvalued': -3.0,
+    'rise': 2.0,
+    'soar': 2.0,
+    'soars': 2.0,
+    'soared': 2.0,
+    'undervalue': 2.0,
+    'undervalued': 2.0,
+    'buy the dip': 2.5,
+    'buy': 4.0,
+    'bought': 4.0,
+    'buying': 4.0,
+    'sell': -4.0,
+    'selling': -4.0,
+    'sold': -4.0,
+    'paper': -1.5,
+    'bagholder': -1.5,
+    'hold': 1.5,
+    'holds': 1.5,
+    'holding': 1.5,
+    'top': 2.0,
+    'tops': 2.0,
+    'topped': 2.0,
+    'hack': -2.0,
+    'hacked': -2.0,
+    'hacks': -2.0,
+    'hacking': -2.0,
+    'stonk': 1.5,
+    'scam': -3.0,
+    'scams': -3.0,
+    'scammed': -3.0,
+    'scamming': -3.0,
+    'profit': 2.0,
+    'profits': -2.0,
+    'green': 2,
+    'red': -2,
+    'money': 1.5,
+    'print': 1.5,
+    'sky': 1.5,
+    'rocket': 3.2,
+    'rockets': 3.2,
+    'rocketed': 3.2,
+    'bull': 3,
+    'bear': -3,
+    'pump': 2.0,
+    'pumps': 2.0,
+    'pumping': 2.0,
+    'pumped': 2.0,
+    'offering': -1,
+    'rip': -2.0,
+    'downgrade': -2.0,
+    'downgrades': -2.0,
+    'downgraded': -2.0,
+    'dump': -2.0,
+    'dumped': -2.0,
+    'dumps': -2.0,
+    'dumping': -2.0,
+    'upgrade': 2.0,
+    'upgraded': 2.0,
+    'upgrades': -2.0,
+    'hot': 1.5,
+    'drop': -2.5,
+    'dropped': -2.5,
+    'rebound': 1.5,
+    'rebounds': 1.5,
+    'rebounded': 1.5,
+    'up': 2.0,
+    'down': -2.0,
+    'downs': -2.0,
+    'downed': -2.0,
+    'crash': -2.5,
+    'crack': -2.5,
+    'cracks': -2.5,
+    'cracked': -2.5,
+    'disaster': -3.0,
+}
 
-def Praw(request):
-    new_words = {
-        'decline': -2.0,
-        'declines': -2.0,
-        'declined': -2.0,
-        'incline': 2.0,
-        'inclines': 2.0,
-        'inclined': 2.0,
-        'mainiac': 3.0,
-        'moon': 4.0,
-        'moons': 4.0,
-        'high': 2.0,
-        'slip': -1.0,
-        'slipped': -1.0,
-        'mooning': 4.0,
-        'long': 2.0,
-        'longs': 2.0,
-        'short': -2.0,
-        'shorts': -2.0,
-        'lose': -2.0,
-        'loss': -2.0,
-        'lost': -2.0,
-        'volatile': -2.0,
-        'volatiles': -2.0,
-        'weak': -2.0,
-        'weaken': -2.0,
-        'strong': 2.0,
-        'fall': -2.0,
-        'fallen': -2.0,
-        'falls': -2.0,
-        'fell': -2.0,
-        'doom': -3.0,
-        'climb': 2.0,
-        'climbs': 2.0,
-        'climbed': 2.0,
-        'climbing': 2.0,
-        'tumble': -2.0,
-        'tumbles': -2.0,
-        'tumbled': -2.0,
-        'tumbling': -2.0,
-        'fear': -2.0,
-        'plunge': -2.0,
-        'recession': -2.0,
-        'plunges': -2.0,
-        'plunged': -2.0,
-        'inches': 2.0,
-        'record': 2.0,
-        'ralie': 2.0,
-        'ralies': 2.0,
-        'ralied': 2.0,
-        'above': 2.0,
-        'aboves': 2.0,
-        'hit': 1.3,
-        'hits': 1.3,
-        'hitting': 1.3,
-        'hodl': 2.0,
-        'ATH': 3.0,
-        'call': 2.0,
-        'dip': -2.0,
-        'ponzi': -3.0,
-        'break': 2.0,
-        'breaks': 2.0,
-        'tendie': 2.0,
-        'surge': 2.0,
-        'surges': 2.0,
-        'surged': 2.0,
-        'overvalue': -3.0,
-        'overvalued': -3.0,
-        'rise': 2.0,
-        'soar': 2.0,
-        'soars': 2.0,
-        'soared': 2.0,
-        'undervalue': 2.0,
-        'undervalued': 2.0,
-        'buy the dip': 2.5,
-        'buy': 4.0,
-        'bought': 4.0,
-        'buying': 4.0,
-        'sell': -4.0,
-        'selling': -4.0,
-        'sold': -4.0,
-        'paper': -1.5,
-        'bagholder': -1.5,
-        'hold': 1.5,
-        'holds': 1.5,
-        'holding': 1.5,
-        'top': 2.0,
-        'tops': 2.0,
-        'topped': 2.0,
-        'hack': -2.0,
-        'hacked': -2.0,
-        'hacks': -2.0,
-        'hacking': -2.0,
-        'stonk': 1.5,
-        'scam': -3.0,
-        'scams': -3.0,
-        'scammed': -3.0,
-        'scamming': -3.0,
-        'profit': 2.0,
-        'profits': -2.0,
-        'green': 2,
-        'red': -2,
-        'money': 1.5,
-        'print': 1.5,
-        'sky': 1.5,
-        'rocket': 3.2,
-        'rockets': 3.2,
-        'rocketed': 3.2,
-        'bull': 3,
-        'bear': -3,
-        'pump': 2.0,
-        'pumps': 2.0,
-        'pumping': 2.0,
-        'pumped': 2.0,
-        'offering': -1,
-        'rip': -2.0,
-        'downgrade': -2.0,
-        'downgrades': -2.0,
-        'downgraded': -2.0,
-        'dump': -2.0,
-        'dumped': -2.0,
-        'dumps': -2.0,
-        'dumping': -2.0,
-        'upgrade': 2.0,
-        'upgraded': 2.0,
-        'upgrades': -2.0,
-        'hot': 1.5,
-        'drop': -2.5,
-        'dropped': -2.5,
-        'rebound': 1.5,
-        'rebounds': 1.5,
-        'rebounded': 1.5,
-        'up': 2.0,
-        'down': -2.0,
-        'downs': -2.0,
-        'downed': -2.0,
-        'crash': -2.5,
-        'crack': -2.5,
-        'cracks': -2.5,
-        'cracked': -2.5,
-        'disaster': -3.0,
-    }
+remove_words = [
+    'free',
+    'install',
+    'download',
+    'app',
+    'wallet',
+    'hardware',
+    'link',
+    'card',
+    'payapl',
+    'mine',
+    'platform',
+    'browser',
+    'site',
+    'earn',
+    'project',
+    'check'
+]
 
-    def get_vader_df(df, column_name):
-        analyzer = SentimentIntensityAnalyzer()  # vader 객체
-        analyzer.lexicon.update(new_words)
-        title_vader = df[column_name].apply(analyzer.polarity_scores)
-        # df로 변환해 반환해준다.
-        vader_title_df = pd.DataFrame(dict(title_vader)).T
-        return vader_title_df  # vader실행 결과를 반환해준다.
+include_words = [
+    'price', 'crypto',
+    'currency', 'money',
+    'BTC', 'bitcoin', 'bit',
+    'ETH', 'ether', 'ethereum',
+    'XRP', 'ripple',
+    'DOGE', 'doge',
+    'coin', 'market', 'elon', 'musk',
+    'fed', 'powell'
+]
+url_patt = r"(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}"
+nan_patt = r"(^.?removed.?$)|(^.?deleted.?$)"  # 결측치 제거용
+remove_patterns = [url_patt, nan_patt]
 
-    remove_words = [
-        'free',
-        'install',
-        'download',
-        'app',
-        'wallet',
-        'hardware',
-        'link',
-        'card',
-        'payapl',
-        'mine',
-        'platform',
-        'browser',
-        'site',
-        'earn',
-        'project',
-        'check'
-    ]
+def index(request):
 
-    include_words = [
-        'price', 'crypto',
-        'currency', 'money',
-        'BTC', 'bitcoin', 'bit',
-        'ETH', 'ether', 'ethereum',
-        'XRP', 'ripple',
-        'DOGE', 'doge',
-        'coin', 'market', 'elon', 'musk',
-        'fed', 'powell'
-    ]
-    url_patt = r"(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}"
-    nan_patt = r"(^.?removed.?$)|(^.?deleted.?$)"  # 결측치 제거용
-    remove_patterns = [url_patt, nan_patt]
 
     def get_word_patt(is_remove=True):
         if is_remove:
@@ -249,7 +240,7 @@ def Praw(request):
     )
 
     device = torch.device('cpu')
-    model = torch.load('/Users/jihunlee/Projects/crypto_reaction_check/Crypto_temp/ShowCryptoTemp/bitcoinmodel05',
+    model = torch.load('/Users/jihunlee/Projects/crypto_reaction_check/Crypto_temp/ShowCryptoTemp/bitcoinmodel0.5ver4.0',
                        map_location=device)
     tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-cased', do_lower_case=False)
 
@@ -301,7 +292,6 @@ def Praw(request):
             outputs = model(b_input_ids,
                             token_type_ids=None,
                             attention_mask=b_input_mask)
-
         # 로스 구함
         logits = outputs[0]
 
@@ -344,17 +334,16 @@ def Praw(request):
         submissions_df['predict_value'] = 0
         submissions_df = ModelPredict(submissions_df)
         df = submissions_df.values.tolist()
-        # logit_test = test_sentences((["El Salvador Bought  Bitcoins In The Dip"]))
         print(submissions_df)
         listdf = []
 
-        if Subreddit_name =="Bitcoin":
+        if Subreddit_name == "Bitcoin":
             for row in df:
                 listdf.append(Scrapper_bitcoin(post_id=row[0],
-                                       title=row[1],
-                                       created_utc=row[2],
-                                       predict_value=row[3]
-                                       ))
+                                               title=row[1],
+                                               created_utc=row[2],
+                                               predict_value=row[3]
+                                               ))
             Scrapper_bitcoin.objects.bulk_create(listdf)
 
             df2 = pd.DataFrame({'period': [], 'pos': [], 'neg': []})  # period별 결과값을 넣을 dataframe
@@ -364,9 +353,9 @@ def Praw(request):
                 min_diff = (now - dt.datetime.fromtimestamp(i.created_utc)).total_seconds() / 60 / 60 / 24
                 if (df2['period'] == int(min_diff)).any():
                     if i.predict_value > 0.5:  # title_vader 모델결과로 바꾸면됨
-                        df2.loc[(df2['period'] == int(min_diff)), 'pos'] += 1
+                        df2.loc[(df2['period'] == int(min_diff)), 'pos'] += 2
                     elif i.predict_value < -0.5:
-                        df2.loc[(df2['period'] == int(min_diff)), 'neg'] += 1
+                        df2.loc[(df2['period'] == int(min_diff)), 'neg'] += 2
                 else:
                     df2 = df2.append({'period': int(min_diff), 'pos': 0, 'neg': 0}, ignore_index=True)
 
@@ -374,26 +363,25 @@ def Praw(request):
             df2 = df2.set_index('period')  # index period로
 
             df2['axis'] = df2['pos'] / (df2['pos'] + df2['neg']) * 100  # 그냥 비율
-            data_std = (df2['axis'] - df2['axis'].min()) / (df2['axis'].max() - df2['axis'].min())  # 정규화
             df2['axis'] -= 20  # 평균이 70정도라 20빼줌    기간이 짧으면 0 이하로 튈수 있음
 
-            cryptotempname = ShowCryptoTemp.objects.get(pk =1)
+            cryptotempname = ShowCryptoTemp.objects.get(pk=1)
             print(cryptotempname.CryptoTemperture)
             df2 = df2.fillna(50)
             print(df2.head(100))
-            print(df2.iloc[[0],[2]])
-            df3 = df2.iloc[[0],[2]]
+            print(df2.iloc[[0], [2]])
+            df3 = df2.iloc[[0], [2]]
             cryptotempname.CryptoTemperture = int(df3['axis'][0])
             cryptotempname.save()
 
 
-        elif Subreddit_name =="ethereum":
+        elif Subreddit_name == "ethereum":
             for row in df:
                 listdf.append(Scrapper_Ethereum(post_id=row[0],
-                                       title=row[1],
-                                       created_utc=row[2],
-                                       predict_value=row[3]
-                                       ))
+                                                title=row[1],
+                                                created_utc=row[2],
+                                                predict_value=row[3]
+                                                ))
             Scrapper_Ethereum.objects.bulk_create(listdf)
 
             df2 = pd.DataFrame({'period': [], 'pos': [], 'neg': []})  # period별 결과값을 넣을 dataframe
@@ -413,10 +401,9 @@ def Praw(request):
             df2 = df2.set_index('period')  # index period로
 
             df2['axis'] = df2['pos'] / (df2['pos'] + df2['neg']) * 100  # 그냥 비율
-            data_std = (df2['axis'] - df2['axis'].min()) / (df2['axis'].max() - df2['axis'].min())  # 정규화
             df2['axis'] -= 20  # 평균이 70정도라 20빼줌    기간이 짧으면 0 이하로 튈수 있음
 
-            cryptotempname = ShowCryptoTemp.objects.get(pk = 2)
+            cryptotempname = ShowCryptoTemp.objects.get(pk=2)
             print(cryptotempname.CryptoTemperture)
             df2 = df2.fillna(50)
             print(df2.head(100))
@@ -428,10 +415,10 @@ def Praw(request):
         elif Subreddit_name == "doge":
             for row in df:
                 listdf.append(Scrapper_doge(post_id=row[0],
-                                                title=row[1],
-                                                created_utc=row[2],
-                                                predict_value=row[3]
-                                                ))
+                                            title=row[1],
+                                            created_utc=row[2],
+                                            predict_value=row[3]
+                                            ))
             Scrapper_doge.objects.bulk_create(listdf)
 
             df2 = pd.DataFrame({'period': [], 'pos': [], 'neg': []})  # period별 결과값을 넣을 dataframe
@@ -451,10 +438,9 @@ def Praw(request):
             df2 = df2.set_index('period')  # index period로
 
             df2['axis'] = df2['pos'] / (df2['pos'] + df2['neg']) * 100  # 그냥 비율
-            data_std = (df2['axis'] - df2['axis'].min()) / (df2['axis'].max() - df2['axis'].min())  # 정규화
             df2['axis'] -= 20  # 평균이 70정도라 20빼줌    기간이 짧으면 0 이하로 튈수 있음
 
-            cryptotempname = ShowCryptoTemp.objects.get(pk =3)
+            cryptotempname = ShowCryptoTemp.objects.get(pk=3)
             print(cryptotempname.CryptoTemperture)
             df2 = df2.fillna(50)
             print(df2.head(100))
@@ -468,14 +454,6 @@ def Praw(request):
     Subreddit_scrapper("doge")
 
 
-    # scrapper_df_to_model = scrapper()
-    # scrapper_df_to_model.myList = json.dumps(df)
-    # scrapper_df_to_model.save()
-
-    return HttpResponse("success")
-
-
-def index(request):
     Bitcoin_temp_Query = ShowCryptoTemp.objects.filter(CryptoName='BitCoin')
     Ethereum_temp_Query = ShowCryptoTemp.objects.filter(CryptoName='Ethereum')
     Doge_temp_Query = ShowCryptoTemp.objects.filter(CryptoName='Doge')
@@ -489,5 +467,4 @@ def index(request):
         'Ethereum_temp': Ethereum_temp,
         'Doge_temp': Doge_temp,
     }
-    # return HttpResponse(Bitcoin_temp)
     return render(request, "ShowCryptoTemp/about.html", context)

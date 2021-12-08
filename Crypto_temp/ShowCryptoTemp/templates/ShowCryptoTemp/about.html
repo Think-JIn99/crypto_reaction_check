@@ -115,15 +115,15 @@
                         <div class="col-xs-12 col-sm-6 col-md-3">
                             <div class="skill-item center-block">
                                 <div class="chart-container">
-									{% if Bitcoin_temp < 40 %}
+									{% if Bitcoin_temp < 45 %}
 									<div class="chart " data-percent="{{Bitcoin_temp}}" data-bar-color="#5ACFC9">
                                         <span class="percent" data-after="°C">{{BitCoin_temp}}</span>
                                     </div>
-									{% elif Bitcoin_temp < 60 %}
+									{% elif Bitcoin_temp < 55 %}
 									<div class="chart " data-percent="{{Bitcoin_temp}}" data-bar-color="#8AD879">
                                         <span class="percent" data-after="°C">{{BitCoin_temp}}</span>
                                     </div>
-									{% elif Bitcoin_temp < 75 %}
+									{% elif Bitcoin_temp < 65 %}
 									<div class="chart " data-percent="{{Bitcoin_temp}}" data-bar-color="#FA9F42">
                                         <span class="percent" data-after="°C">{{BitCoin_temp}}</span>
                                     </div>
@@ -141,15 +141,15 @@
                         <div class="col-xs-12 col-sm-6 col-md-3">
                             <div class="skill-item center-block">
                                 <div class="chart-container">
-									{% if Ethereum_temp < 40 %}
+									{% if Ethereum_temp < 45 %}
 									<div class="chart " data-percent="{{Ethereum_temp}}" data-bar-color="#5ACFC9">
                                         <span class="percent" data-after="°C">{{Ethereum_temp}}</span>
                                     </div>
-									{% elif Ethereum_temp < 60 %}
+									{% elif Ethereum_temp < 55 %}
 									<div class="chart " data-percent="{{Ethereum_temp}}" data-bar-color="#8AD879">
                                         <span class="percent" data-after="°C">{{Ethereum_temp}}</span>
                                     </div>
-									{% elif Ethereum_temp < 75 %}
+									{% elif Ethereum_temp < 65 %}
 									<div class="chart " data-percent="{{Ethereum_temp}}" data-bar-color="#FA9F42">
                                         <span class="percent" data-after="°C">{{Ethereum_temp}}</span>
                                     </div>
@@ -167,15 +167,15 @@
                         <div class="col-xs-12 col-sm-6 col-md-3">
                             <div class="skill-item center-block">
                                 <div class="chart-container">
-									{% if Doge_temp < 40 %}
+									{% if Doge_temp < 45 %}
 									<div class="chart " data-percent="{{Doge_temp}}" data-bar-color="#5ACFC9">
                                         <span class="percent" data-after="°C">{{Doge_temp}}</span>
                                     </div>
-									{% elif Doge_temp < 60 %}
+									{% elif Doge_temp < 55 %}
 									<div class="chart " data-percent="{{Doge_temp}}" data-bar-color="#8AD879">
                                         <span class="percent" data-after="°C">{{Doge_temp}}</span>
                                     </div>
-									{% elif Doge_temp < 75 %}
+									{% elif Doge_temp < 65 %}
 									<div class="chart " data-percent="{{Doge_temp}}" data-bar-color="#FA9F42">
                                         <span class="percent" data-after="°C">{{Doge_temp}}</span>
                                     </div>
@@ -198,9 +198,9 @@
         <br><br><br><br>
 
         {% load staticfiles %}
-        <script src="{%static "jquery-2.2.4.min.js" %}"></script>
-        <script src="{%static "jquery.appear.min.js" %}"></script>
-        <script src="{%static "jquery.easypiechart.min.js" %}"></script>
+        <script src="{% static "jquery-2.2.4.min.js" %}"></script>
+        <script src="{% static "jquery.appear.min.js" %}"></script>
+        <script src="{% static "jquery.easypiechart.min.js" %}"></script>
         <script>
             'use strict';
 

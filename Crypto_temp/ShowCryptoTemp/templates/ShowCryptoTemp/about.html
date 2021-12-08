@@ -95,9 +95,7 @@
             p {
                 font-weight: 900;
             }
-            .chart-container > .chart {
-                data-bar-color: #369670;
-            }
+
         </style>
 
     </head>
@@ -189,33 +187,6 @@
                                 </div>
 
                                 <p>Doge</p>
-                            </div>
-                        </div>
-
-                        <div class="col-xs-12 col-sm-6 col-md-3">
-                            <div class="skill-item center-block">
-                                <div class="chart-container">
-
-									{% if Ripple_temp < 40 %}
-									<div class="chart " data-percent="{{Ripple_temp}}" data-bar-color="#5ACFC9">
-                                        <span class="percent" data-after="°C">{{Ripple_temp}}</span>
-                                    </div>
-									{% elif Ripple_temp < 60 %}
-									<div class="chart " data-percent="{{Ripple_temp}}" data-bar-color="#8AD879">
-                                        <span class="percent" data-after="°C">{{Ripple_temp}}</span>
-                                    </div>
-									{% elif Ripple_temp < 75 %}
-									<div class="chart " data-percent="{{Ripple_temp}}" data-bar-color="#FA9F42">
-                                        <span class="percent" data-after="°C">{{Ripple_temp}}</span>
-                                    </div>
-									{% else %}
-									<div class="chart " data-percent="{{Ripple_temp}}" data-bar-color="#F3533A">
-                                        <span class="percent" data-after="°C">{{Ripple_temp}}</span>
-                                    </div>
-									{% endif %}
-                                </div>
-
-                                <p>Ripple</p>
                             </div>
                         </div>
                     </div>

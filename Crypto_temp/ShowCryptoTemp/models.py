@@ -10,15 +10,6 @@ class ShowCryptoTemp(models.Model): # 크립토 온도 측정해서 보여주는
         return self.CryptoName
 
 
-class scrapper(models.Model): # 스크래퍼
-    post_id = models.CharField(max_length=10)
-    title = models.TextField()
-    created_utc = models.IntegerField(null=True)
-    predict_value = models.IntegerField(null=True)
-
-    def __str__(self):
-        return self.title
-
 class Scrapper_bitcoin(models.Model): # 스크래퍼
     post_id = models.CharField(max_length=10)
     title = models.TextField()
@@ -37,16 +28,6 @@ class Scrapper_Ethereum(models.Model): # 스크래퍼
     def __str__(self):
         return self.title
 
-
-class Scrapper_ripple(models.Model): # 스크래퍼
-    post_id = models.CharField(max_length=10)
-    title = models.TextField()
-    created_utc = models.IntegerField(null=True)
-    predict_value = models.IntegerField(null=True)
-
-    def __str__(self):
-        return self.title
-
 class Scrapper_doge(models.Model): # 스크래퍼
     post_id = models.CharField(max_length=10)
     title = models.TextField()
@@ -57,11 +38,3 @@ class Scrapper_doge(models.Model): # 스크래퍼
         return self.title
 
 
-class Scrapper_ada(models.Model): # 스크래퍼
-    post_id = models.CharField(max_length=10)
-    title = models.TextField()
-    created_utc = models.IntegerField(null=True)
-    predict_value = models.IntegerField(null=True)
-
-    def __str__(self):
-        return self.title

@@ -373,29 +373,9 @@ def Praw(request):
                                                 ))
             Scrapper_doge.objects.bulk_create(listdf)
 
-        elif Subreddit_name == "Ripple":
-            for row in df:
-                listdf.append(Scrapper_ripple(post_id=row[0],
-                                                title=row[1],
-                                                created_utc=row[2],
-                                                predict_value=row[3]
-                                                ))
-            Scrapper_ripple.objects.bulk_create(listdf)
-
-        elif Subreddit_name == "cardano":
-            for row in df:
-                listdf.append(Scrapper_doge(post_id=row[0],
-                                                title=row[1],
-                                                created_utc=row[2],
-                                                predict_value=row[3]
-                                                ))
-            Scrapper_doge.objects.bulk_create(listdf)
-
     Subreddit_scrapper("Bitcoin")
     Subreddit_scrapper("ethereum")
     Subreddit_scrapper("doge")
-    Subreddit_scrapper("Ripple")
-    Subreddit_scrapper("cardano")
 
 
     # scrapper_df_to_model = scrapper()
@@ -409,18 +389,15 @@ def index(request):
     Bitcoin_temp_Query = ShowCryptoTemp.objects.filter(CryptoName='BitCoin')
     Ethereum_temp_Query = ShowCryptoTemp.objects.filter(CryptoName='Ethereum')
     Doge_temp_Query = ShowCryptoTemp.objects.filter(CryptoName='Doge')
-    Ripple_temp_Query = ShowCryptoTemp.objects.filter(CryptoName='Ripple')
 
     Bitcoin_temp = float(Bitcoin_temp_Query.values('CryptoTemperture')[0]['CryptoTemperture'])
     Ethereum_temp = float(Ethereum_temp_Query.values('CryptoTemperture')[0]['CryptoTemperture'])
     Doge_temp = float(Doge_temp_Query.values('CryptoTemperture')[0]['CryptoTemperture'])
-    Ripple_temp = float(Ripple_temp_Query.values('CryptoTemperture')[0]['CryptoTemperture'])
 
     context = {
         'Bitcoin_temp': Bitcoin_temp,
         'Ethereum_temp': Ethereum_temp,
         'Doge_temp': Doge_temp,
-        'Ripple_temp': Ripple_temp,
     }
     # return HttpResponse(Bitcoin_temp)
     return render(request, "ShowCryptoTemp/about.html", context)
